@@ -2,6 +2,7 @@ import json
 from datetime import date, timedelta
 from rich.console import Console
 from rich.table import Table
+console = Console()
 
 heute = date.today().isoformat()
 
@@ -28,16 +29,9 @@ for tag in tage:
     if tag in eintraege:
         e = eintraege[tag]
         table.add_row(tag, e["kraftsport"], e["meditation"], e["sauna"], e["coding"] )
-        print(f"{tag}: Kraftsport: {e["kraftsport"]} Meditation: {e["meditation"]} Sauna: {e["sauna"]} Coding: {e["coding"]} ")
     else:
-        print(f"{tag} is not in")
         table.add_row(tag, "-", "-", "-", "-")
-                      
-                      
-eintraege.get(tag, {})
 
-
-console = Console()
 console.print(table)
 
 if heute in eintraege:
