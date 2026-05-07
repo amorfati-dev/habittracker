@@ -1,5 +1,7 @@
 import json
-from datetime import date
+from datetime import date, timedelta
+from rich.console import Console
+from rich.table import Table
 
 heute = date.today().isoformat()
 
@@ -8,6 +10,35 @@ try:
         eintraege = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError):
     eintraege = {}
+
+table = Table(title="Habit-Tracker")
+table.add_column("Date", justify="right", style="cyan", no_wrap=True)
+table.add_column("Kraftsport", style="magenta")
+table.add_column("Meditation", justify="right", style="green")
+table.add_column("Sauna", justify="right", style="green")
+table.add_column("Coding", justify="right", style="green")
+
+tage = []
+
+for n in range(7):
+    tag = date.today() - timedelta(days=n)
+    tage.append(tag.isoformat())
+
+for tag in tage:
+    if tag in eintraege:
+        e = eintraege[tag]
+        table.add_row(tag, e["kraftsport"], e["meditation"], e["sauna"], e["coding"] )
+        print(f"{tag}: Kraftsport: {e["kraftsport"]} Meditation: {e["meditation"]} Sauna: {e["sauna"]} Coding: {e["coding"]} ")
+    else:
+        print(f"{tag} is not in")
+        table.add_row(tag, "-", "-", "-", "-")
+                      
+                      
+eintraege.get(tag, {})
+
+
+console = Console()
+console.print(table)
 
 if heute in eintraege:
     print("Heute gibt es schon einen Eintrag.")
