@@ -10,5 +10,17 @@
         "kraftsport": "y",
         "sauna": "y",
         "coding": "y"
+    },
+    "2026-05-06": {
+        "meditation": "y",
+        "kraftsport": "n",
+        "sauna": "n",
+        "coding": "y"
+    },
+    "2026-05-07": {
+        "meditation": "y",
+        "kraftsport": "y",
+        "sauna": "y",
+        "coding": "y"
     }
 }
