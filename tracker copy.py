@@ -1,4 +1,4 @@
-import sqlite3
+import json
 from datetime import date, timedelta
 from rich.console import Console
 from rich.table import Table
@@ -7,31 +7,15 @@ console = Console()
 heute = date.today().isoformat()
 
 def lade_eintraege():
-    conn = sqlite3.connect("tracker.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM entries")
-    zeilen = cursor.fetchall()
-    conn.close()
-    
-    eintraege = {}
-    for datum, practice, erledigt in zeilen:
-        if datum not in eintraege:
-            eintraege[datum] = {}
-        eintraege[datum][practice] = "y" if erledigt == 1 else "n"
-    return eintraege
+    try: 
+        with open("entries.json", "r") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
     
 def speichere_eintraege(daten):
-    conn = sqlite3.connect("tracker.db")
-    cursor = conn.cursor()
-    for tag, eintrag in daten.items(): 
-        for practice, status in eintrag.items():
-            erledigt = 1 if status == "y" else 0
-            cursor.execute(
-            "INSERT OR REPLACE INTO entries (datum, practice, erledigt) VALUES (?, ?, ?)",
-            (tag, practice, erledigt))
-    conn.commit()
-    conn.close()
-
+    with open("entries.json", "w") as f: 
+        json.dump(daten, f,indent=4)
 
 def zeige_uebersicht(datensatz: dict)-> None:
     table = Table(title="Habit-Tracker")
