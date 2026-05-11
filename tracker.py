@@ -56,6 +56,7 @@ def zeige_uebersicht(datensatz: dict)-> None:
 
     console.print(table)
 
+
 def errechne_streak(eintraege, practice) -> int:
     streak = 0
     for tag in sorted(eintraege, reverse = True):
