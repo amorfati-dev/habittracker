@@ -56,11 +56,24 @@ def zeige_uebersicht(datensatz: dict)-> None:
 
     console.print(table)
 
+def errechne_streak(eintraege, practice) -> int:
+    streak = 0
+    for tag in sorted(eintraege, reverse = True):
+        if eintraege[tag][practice] == "y":
+            streak +=1
+        else:
+            break
+    return streak
 
 
 eintraege = lade_eintraege()
 
 zeige_uebersicht(eintraege)
+
+print(errechne_streak(eintraege, "meditation"))
+print(errechne_streak(eintraege, "kraftsport"))
+print(errechne_streak(eintraege, "sauna"))
+print(errechne_streak(eintraege, "coding"))
 
 if heute in eintraege:
     print("Heute gibt es schon einen Eintrag.")
@@ -89,5 +102,6 @@ eintraege[heute] = {
 }
 
 speichere_eintraege(eintraege)
+
 
 print(f"Eintrag für {heute} gespeichert.")
