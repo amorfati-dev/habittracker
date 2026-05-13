@@ -1,6 +1,15 @@
 from fastapi import FastAPI
 import sqlite3
-import uvicorn
+from pydantic import BaseModel
+
+practices = ["meditation", "sauna", "kraftsport", "coding"]
+
+class Eintrag(BaseModel):
+    datum: str
+    meditation: str
+    sauna: str
+    kraftsport: str
+    coding: str
 
 def lade_eintraege():
     """Lädt die Einträge aus der Datenbank und gibt sie als Dictionary zurück"""
@@ -23,6 +32,16 @@ def lade_eintraege():
             print(f"Nach Wiederholung: {entries}")
     return entries
 
+def speichere_eintrag(eintrag: Eintrag):
+    conn = sqlite3.connect("tracker.db")
+    cursor = conn.cursor()
+    for practice in practices:
+        wert = getattr(eintrag, practice)
+        erledigt = 1 if wert == "y" else 0
+        cursor.execute("INSERT OR REPLACE INTO entries (datum, practice, erledigt) VALUES (?, ?, ?)", (eintrag.datum, practice, erledigt))
+    conn.commit()
+    conn.close()
+
 app = FastAPI()
 
 @app.get("/")
@@ -31,7 +50,12 @@ def hello():
     return {"message": "Hello, World!"}
 
 @app.get("/entries")
-def get_entries() -> list[dict]:
+def get_entries() -> list[Eintrag]:
         """Gibt die Einträge als JSON zurück"""
         return lade_eintraege()
         
+@app.post("/entries")
+def post_entries(eintrag: Eintrag):
+        """Schreibt einen neuen Eintrag"""
+        speichere_eintrag(eintrag)
+        return eintrag
