@@ -42,6 +42,13 @@ def speichere_eintrag(eintrag: Eintrag):
     conn.commit()
     conn.close()
 
+def loesche_eintrag(datum: str):
+    conn = sqlite3.connect("tracker.db")
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM entries WHERE datum = ?", (datum,))
+    conn.commit()
+    conn.close()
+
 app = FastAPI()
 
 @app.get("/")
@@ -59,3 +66,16 @@ def post_entries(eintrag: Eintrag):
         """Schreibt einen neuen Eintrag"""
         speichere_eintrag(eintrag)
         return eintrag
+
+@app.delete("/entries/{datum}")
+def delete_entries(datum: str):
+    """Löscht einen Eintrag"""
+    loesche_eintrag(datum)
+    return {"message": "Eintrag gelöscht"}
+
+@app.put("/entries/{datum}")
+def put_entries(datum: str, eintrag: Eintrag):
+    """Aktualisiert einen Eintrag"""
+    eintrag.datum = datum
+    speichere_eintrag(eintrag)
+    return eintrag
