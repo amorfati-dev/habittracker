@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 import sqlite3
 from pydantic import BaseModel
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
 
 practices = ["meditation", "sauna", "kraftsport", "coding"]
 
@@ -51,10 +54,13 @@ def loesche_eintrag(datum: str):
 
 app = FastAPI()
 
+templates = Jinja2Templates(directory="templates")
+
 @app.get("/")
-def hello():
-    """Gib eine freundliche Nachricht zurück"""
-    return {"message": "Hello, World!"}
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse(request, "index.html")
+
 
 @app.get("/entries")
 def get_entries() -> list[Eintrag]:
