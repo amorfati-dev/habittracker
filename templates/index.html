@@ -2,31 +2,18 @@
 <html>
 <head>
     <title>Practice Tracker</title>
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
 </head>
 <body>
     <h1>Practice Tracker</h1>
-    <table>
-    <thead>
-        <tr>
-            <th>Datum</th>
-            <th>Meditation</th>
-            <th>Kraftsport</th>
-            <th>Sauna</th>
-            <th>Coding</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for eintrag in eintraege %}
-        <tr>
-            <td>{{ eintrag.datum }}</td>
-            <td>{{ eintrag.meditation }}</td>
-            <td>{{ eintrag.kraftsport }}</td>
-            <td>{{ eintrag.sauna }}</td>
-            <td>{{ eintrag.coding }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-    </table>
+    <div id="table-container">
+        {% include "_table.html" %}
+    </div>
+    <h2>Heute tracken</h2>
+<button hx-post="/track/meditation" hx-target="#table-container">Meditation</button>
+<button hx-post="/track/kraftsport" hx-target="#table-container">Kraftsport</button>
+<button hx-post="/track/sauna" hx-target="#table-container">Sauna</button>
+<button hx-post="/track/coding" hx-target="#table-container">Coding</button>
 </body>
 </html>
 

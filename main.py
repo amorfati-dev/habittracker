@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
+from datetime import date
 
 practices = ["meditation", "sauna", "kraftsport", "coding"]
 
@@ -87,3 +88,20 @@ def put_entries(datum: str, eintrag: Eintrag):
     eintrag.datum = datum
     speichere_eintrag(eintrag)
     return eintrag
+
+@app.post("/track/{practice}", response_class=HTMLResponse)
+def check_practice(practice : str, request: Request):
+    """Trackt die Practices die heute durchgeführt wurden"""
+    heute = date.today().isoformat()
+
+    # Direkt in die DB schreiben - nur diese eine Practice für heute speichern
+    conn = sqlite3.connect("tracker.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR REPLACE INTO entries (datum, practice, erledigt) VALUES (?, ?, ?)", (heute, practice, 1))
+    conn.commit()
+    conn.close()
+
+    #Aktualisierte Eintrage laden und nur Tabelle rendern
+    eintraege = lade_eintraege()
+    eintraege = sorted(eintraege, key=lambda x: x["datum"], reverse=True)
+    return templates.TemplateResponse(request, "_table.html", {"eintraege": eintraege})
