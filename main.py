@@ -59,7 +59,9 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/")
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    return templates.TemplateResponse(request, "index.html")
+    eintraege = lade_eintraege()
+    eintraege = sorted(eintraege, key=lambda x: x["datum"], reverse=True)
+    return templates.TemplateResponse(request, "index.html", {"eintraege": eintraege})
 
 
 @app.get("/entries")

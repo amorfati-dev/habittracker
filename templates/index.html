@@ -5,7 +5,28 @@
 </head>
 <body>
     <h1>Practice Tracker</h1>
-    <p>Hier kommt deine Habit-Übersicht hin.</p>
+    <table>
+    <thead>
+        <tr>
+            <th>Datum</th>
+            <th>Meditation</th>
+            <th>Kraftsport</th>
+            <th>Sauna</th>
+            <th>Coding</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for eintrag in eintraege %}
+        <tr>
+            <td>{{ eintrag.datum }}</td>
+            <td>{{ eintrag.meditation }}</td>
+            <td>{{ eintrag.kraftsport }}</td>
+            <td>{{ eintrag.sauna }}</td>
+            <td>{{ eintrag.coding }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
 </body>
 </html>
 
