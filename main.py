@@ -28,12 +28,10 @@ def lade_eintraege():
         if datum not in zwischen:
             zwischen[datum] = {}
         zwischen[datum][practice] = "y" if erledigt == 1 else "n"
-        print(f"Nach Iteration: {zwischen}")
     entries = []
     for datum, eintrag in zwischen.items():
             eintrag["datum"] = datum
             entries.append(eintrag)
-            print(f"Nach Wiederholung: {entries}")
     return entries
 
 def speichere_eintrag(eintrag: Eintrag):
@@ -53,6 +51,18 @@ def loesche_eintrag(datum: str):
     conn.commit()
     conn.close()
 
+def toggle_practice(datum: str, practice: str):
+    conn = sqlite3.connect("tracker.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT erledigt FROM entries WHERE datum = ? AND practice = ?", (datum, practice))
+    result = cursor.fetchone()
+    current_value = result[0] if result else 0
+    toggle_value = 1 if current_value == 0 else 0
+    cursor.execute("INSERT OR REPLACE INTO entries (datum, practice, erledigt) VALUES (?, ?, ?)", (datum, practice, toggle_value))
+    conn.commit()
+    conn.close()
+
+
 def errechne_streak(eintraege: list[Eintrag], practice: str) -> int:
     """Errechnet die aktuelle Streak für die gegebene Practice"""
     streak = 0
@@ -63,18 +73,22 @@ def errechne_streak(eintraege: list[Eintrag], practice: str) -> int:
             break
     return streak
 
+def errechne_alle_streaks(eintraege: list[Eintrag]) -> dict[str, int]:
+    """Berechnet die Streaks für alle Practices"""
+    streaks = {}
+    for p in practices:
+        streaks[p] = errechne_streak(eintraege, p)
+    return streaks
+
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 
-@app.get("/")
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     eintraege = lade_eintraege()
     eintraege = sorted(eintraege, key=lambda x: x["datum"], reverse=True)
-    streaks = {}
-    for practice in practices:
-        streaks[practice] = errechne_streak(eintraege, practice)
+    streaks = errechne_alle_streaks(eintraege)
     return templates.TemplateResponse(request, "index.html", {"eintraege": eintraege, "streaks": streaks})
     
 @app.get("/entries")
@@ -105,22 +119,10 @@ def put_entries(datum: str, eintrag: Eintrag):
 def check_practice(practice : str, request: Request):
     """Trackt die Practices die heute durchgeführt wurden"""
     heute = date.today().isoformat()
-
-    # Get the current value of the practice for today
-    conn = sqlite3.connect("tracker.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT erledigt FROM entries WHERE datum = ? AND practice = ?", (heute, practice))
-    result = cursor.fetchone()
-    current_value = result[0] if result else 0
-    toggle_value = 1 if current_value == 0 else 0
-    cursor.execute("INSERT OR REPLACE INTO entries (datum, practice, erledigt) VALUES (?, ?, ?)", (heute, practice, toggle_value))
-    conn.commit()
-    conn.close()
+    toggle_practice(heute, practice)
 
     #Aktualisierte Eintrage laden und nur Tabelle rendern
     eintraege = lade_eintraege()
     eintraege = sorted(eintraege, key=lambda x: x["datum"], reverse=True)
-    streaks = {}
-    for p in practices:
-        streaks[p] = errechne_streak(eintraege, p)
+    streaks = errechne_alle_streaks(eintraege)
     return templates.TemplateResponse(request, "_track_response.html", {"eintraege": eintraege, "streaks": streaks})
