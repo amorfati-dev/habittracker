@@ -53,6 +53,16 @@ def loesche_eintrag(datum: str):
     conn.commit()
     conn.close()
 
+def errechne_streak(eintraege: list[Eintrag], practice: str) -> int:
+    """Errechnet die aktuelle Streak für die gegebene Practice"""
+    streak = 0
+    for eintrag in sorted(eintraege, key=lambda x: x["datum"], reverse=True):
+        if eintrag.get(practice) == "y":
+            streak += 1
+        else:
+            break
+    return streak
+
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
@@ -62,9 +72,11 @@ templates = Jinja2Templates(directory="templates")
 def home(request: Request):
     eintraege = lade_eintraege()
     eintraege = sorted(eintraege, key=lambda x: x["datum"], reverse=True)
-    return templates.TemplateResponse(request, "index.html", {"eintraege": eintraege})
-
-
+    streaks = {}
+    for practice in practices:
+        streaks[practice] = errechne_streak(eintraege, practice)
+    return templates.TemplateResponse(request, "index.html", {"eintraege": eintraege, "streaks": streaks})
+    
 @app.get("/entries")
 def get_entries() -> list[Eintrag]:
         """Gibt die Einträge als JSON zurück"""
@@ -94,14 +106,21 @@ def check_practice(practice : str, request: Request):
     """Trackt die Practices die heute durchgeführt wurden"""
     heute = date.today().isoformat()
 
-    # Direkt in die DB schreiben - nur diese eine Practice für heute speichern
+    # Get the current value of the practice for today
     conn = sqlite3.connect("tracker.db")
     cursor = conn.cursor()
-    cursor.execute("INSERT OR REPLACE INTO entries (datum, practice, erledigt) VALUES (?, ?, ?)", (heute, practice, 1))
+    cursor.execute("SELECT erledigt FROM entries WHERE datum = ? AND practice = ?", (heute, practice))
+    result = cursor.fetchone()
+    current_value = result[0] if result else 0
+    toggle_value = 1 if current_value == 0 else 0
+    cursor.execute("INSERT OR REPLACE INTO entries (datum, practice, erledigt) VALUES (?, ?, ?)", (heute, practice, toggle_value))
     conn.commit()
     conn.close()
 
     #Aktualisierte Eintrage laden und nur Tabelle rendern
     eintraege = lade_eintraege()
     eintraege = sorted(eintraege, key=lambda x: x["datum"], reverse=True)
-    return templates.TemplateResponse(request, "_table.html", {"eintraege": eintraege})
+    streaks = {}
+    for p in practices:
+        streaks[p] = errechne_streak(eintraege, p)
+    return templates.TemplateResponse(request, "_track_response.html", {"eintraege": eintraege, "streaks": streaks})

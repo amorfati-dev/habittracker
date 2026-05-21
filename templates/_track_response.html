@@ -1,0 +1,7 @@
+<div id="table-container">{% include "_table.html" %}</div>
+
+{% set oob = True %}
+<div id="streak-container">{% for practice, streak in streaks.items() %}
+    {% include "_streak.html" %}
+    {% endfor %}
+</div>
